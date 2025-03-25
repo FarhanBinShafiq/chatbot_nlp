@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }} - Mini Info Site</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav>
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('about') }}">About</a>
+        <a href="{{ url_for('services') }}">Services</a>
+        <a href="{{ url_for('contact') }}">Contact</a>
+        <a href="{{ url_for('team') }}">Team</a>
+        <a href="{{ url_for('faq') }}">FAQ</a>
+    </nav>
+    <div class="content">
+        {% block content %}{% endblock %}
+    </div>
+    <div id="chatbot">
+        <h3>Chatbot</h3>
+        <div id="chat-log" style="border: 1px solid #ccc; height: 200px; overflow-y: scroll; padding: 10px;">
+            <p>Bot: Ask me anything about the site!</p>
+        </div>
+        <input type="text" id="chat-input" placeholder="Type your question..." style="width: 70%;">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+    <script>
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const query = input.value.trim();
+            if (!query) return;
+            const chatLog = document.getElementById('chat-log');
+            chatLog.innerHTML += `<p>You: ${query}</p>`;
+            
+            fetch('/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: query })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.results.length > 0) {
+                    data.results.forEach(result => {
+                        chatLog.innerHTML += `<p>Bot: Found at <a href="${result[0]}">${result[0]}</a>: ${result[1]}</p>`;
+                    });
+                } else {
+                    chatLog.innerHTML += `<p>Bot: No results found.</p>`;
+                }
+                chatLog.scrollTop = chatLog.scrollHeight;
+            });
+            input.value = '';
+        }
+        document.getElementById('chat-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html>
